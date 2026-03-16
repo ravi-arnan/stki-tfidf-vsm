@@ -15,7 +15,7 @@ Notebook utama: `STKI_TFIDF_VSM.ipynb`
 
 ---
 
-## Setup di Lokal (untuk teman yang clone repo)
+## Setup di Lokal
 
 ### 1) Clone repository
 ```bash
@@ -23,25 +23,14 @@ git clone https://github.com/ravi-arnan/stki-tfidf-vsm.git
 cd stki-tfidf-vsm
 ```
 
-### 2) (Opsional tapi disarankan) Buat virtual environment Python
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3) Install dependency
+### 2) Install dependency
 ```bash
 pip install --upgrade pip
-pip install jupyter PySastrawi pandas numpy
+pip install PySastrawi pandas numpy
 ```
 
-### 4) Jalankan Jupyter Notebook
-```bash
-jupyter notebook
-```
-Lalu buka file: `STKI_TFIDF_VSM.ipynb`
-
-> Jika menggunakan VS Code, bisa langsung buka folder repo lalu jalankan cell notebook dari editor.
+### 3) Buka notebook di VS Code (extension Colab)
+Buka file `STKI_TFIDF_VSM.ipynb` di VS Code, lalu jalankan cell dari atas ke bawah.
 
 ---
 
