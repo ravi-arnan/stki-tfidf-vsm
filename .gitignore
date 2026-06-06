@@ -1,0 +1,19 @@
+# Python virtual environments
+.venv/
+**/.venv/
+venv/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
