@@ -1,4 +1,19 @@
+<div align="center">
+
 # Sistem Temu Kembali Informasi (STKI)
+
+_Enam metode Information Retrieval untuk korpus Bahasa Indonesia._
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=flat&logo=jupyter&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-2.4-013243?style=flat&logo=numpy&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-3.0-150458?style=flat&logo=pandas&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.8-F7931E?style=flat&logo=scikitlearn&logoColor=white)
+![Sastrawi](https://img.shields.io/badge/Sastrawi-1.2-4B8BBE?style=flat)
+![NLTK](https://img.shields.io/badge/NLTK-stopwords-154F5B?style=flat)
+![Status](https://img.shields.io/badge/status-selesai-success?style=flat)
+
+</div>
 
 Implementasi enam metode dasar Information Retrieval untuk korpus berbahasa Indonesia, dengan fokus pada TF-IDF dan Vector Space Model. Setiap metode disertai dasar teori, rumus, dan eksperimen pada jurnal nyata. Proyek ini dikerjakan sebagai tugas UTS mata kuliah STKI.
 
