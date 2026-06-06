@@ -1,0 +1,15 @@
+# Sistem Temu Kembali Informasi (STKI) — dependency
+# Python 3.12
+
+numpy==2.4.4
+pandas==3.0.2
+scikit-learn==1.8.0
+matplotlib==3.10.9
+pdfplumber==0.11.9
+PySastrawi==1.2.0
+nltk
+
+# Lingkungan notebook
+jupyterlab==4.5.6
+notebook==7.5.5
+ipykernel==7.2.0
