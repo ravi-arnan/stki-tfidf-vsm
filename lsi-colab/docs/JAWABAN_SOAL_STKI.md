@@ -93,36 +93,49 @@ Ya, keduanya **mempengaruhi recall dan precision**, karena stemming menentukan t
 
 ## 5. Analisis Metode Kelompok Lain di Drive
 
-> **Catatan:** Analisis di bawah memakai asumsi metode kelompok lain adalah **BM25 (Okapi BM25)** — kandidat paling lazim sebagai "evolusi" dari TF-IDF/VSM. **Ganti bagian ini bila metode kelompok yang dibaca berbeda** (mis. LSI/LSA, Word2Vec/embedding, PageRank).
+Tugas TF-IDF + Vector Space Model dikerjakan oleh **semua** kelompok, jadi yang dibandingkan di sini adalah **metode pembeda** tiap kelompok. Metode pembeda kelompok kami adalah **MinHash (Min-Wise Independent Permutations) + LSH**, sedangkan metode kelompok lain yang kami pelajari adalah **BM25 (Okapi BM25)**.
 
-### Metode kelompok lain (asumsi): BM25
+**Perbedaan paling mendasar: keduanya menyelesaikan persoalan IR yang berbeda.**
+- **MinHash** menjawab "seberapa mirip dokumen A dengan dokumen B" (dokumen-ke-dokumen, estimasi Jaccard similarity, simetris). Tujuan praktisnya deteksi near-duplicate, klastering, dan deduplikasi pada skala besar.
+- **BM25** menjawab "dokumen mana yang paling relevan terhadap query" (query-ke-dokumen, skor relevansi, asimetris). Tujuannya pemeringkatan hasil pencarian.
+
+Jadi perbandingan ini bukan soal "mana lebih akurat pada tugas yang sama", melainkan kontras dua sub-masalah IR: **estimasi kemiripan himpunan** vs **pemeringkatan relevansi**.
+
+### Ringkas metode kami: MinHash + LSH
+
+Tiap dokumen diubah menjadi himpunan **k-shingle** (kami pakai bigram, `K_SHINGLE = 2`). Untuk menghindari pembandingan himpunan besar secara langsung, dibangkitkan `K` fungsi hash universal lalu diambil nilai hash minimum tiap dokumen, menghasilkan **signature matrix** berukuran `K x N`. Jaccard similarity diestimasi dari proporsi posisi signature yang cocok antar dua dokumen. Akurasi estimasi naik seiring `K` dengan error berbanding terbalik terhadap akar `K` (pola diminishing returns).
+
+### Metode kelompok lain: BM25
 
 BM25 adalah model **probabilistik** pemeringkatan. Rumus inti:
 
 $$\text{BM25}(q,d)=\sum_{t\in q}\text{IDF}(t)\cdot\frac{f_{t,d}\,(k_1+1)}{f_{t,d}+k_1\left(1-b+b\frac{|d|}{\text{avgdl}}\right)}$$
 
-dengan `k₁` (saturasi TF, umum 1.2–2.0) dan `b` (normalisasi panjang, umum 0.75).
+dengan `k₁` (saturasi TF, umum 1.2 sampai 2.0) dan `b` (normalisasi panjang, umum 0.75).
 
-### Perbedaan dengan metode kami (TF-IDF + VSM)
+### Perbedaan dengan metode kami (MinHash + LSH)
 
-| Aspek | TF-IDF + VSM (kelompok kami) | BM25 (kelompok lain) |
+| Aspek | MinHash + LSH (kelompok kami) | BM25 (kelompok lain) |
 |---|---|---|
-| Dasar teori | Aljabar linear (ruang vektor, cosine) | Probabilistik (Probabilistic Relevance Framework) |
-| Efek frekuensi term | Linear — TF naik, bobot naik terus | **Saturasi** — kontribusi TF dibatasi `k₁` |
-| Normalisasi panjang | Lewat norma vektor (cosine) | Eksplisit via `b` dan `avgdl`, lebih halus |
-| Parameter | Tanpa konstanta bebas (semua dari rumus) | Ada hyperparameter `k₁`, `b` yang harus disetel |
-| Pengukuran | Sudut antar vektor | Skor penjumlahan per-term |
+| Tujuan utama | Estimasi kemiripan antar-dokumen (Jaccard), deteksi duplikat | Pemeringkatan relevansi dokumen terhadap query |
+| Arah perbandingan | Dokumen vs dokumen (simetris) | Query vs dokumen (asimetris) |
+| Representasi dokumen | Himpunan k-shingle lalu signature ringkas | Bag-of-words berbobot (TF, IDF, panjang) |
+| Dasar teori | Probabilistik hashing (Min-Wise Independent Permutations) | Probabilistic Relevance Framework |
+| Frekuensi term | Diabaikan (hanya ada/tidaknya shingle, biner) | Diperhitungkan dengan saturasi via `k₁` |
+| Sifat hasil | Estimasi (aproksimasi), ada error sekitar 1/akar(K) | Skor eksak deterministik per pasangan query-dokumen |
+| Parameter | `K` (jumlah fungsi hash), `k` (ukuran shingle) | `k₁` (saturasi TF), `b` (normalisasi panjang) |
+| Kekuatan skala | Sangat hemat memori, kandidat duplikat cepat via LSH untuk korpus besar | Cepat untuk ranking per query, tidak dirancang untuk all-pairs similarity |
 
-### Keuntungan BM25 (dibanding TF-IDF/VSM kami)
-- **Saturasi TF lebih realistis** — mengoreksi kelemahan TF-IDF yang membuat dokumen "spam keyword" berskor tak wajar tinggi.
-- **Normalisasi panjang lebih luwes** (`b` bisa disetel), sering memberi relevansi lebih baik pada koleksi dengan panjang dokumen bervariasi.
-- **Standar industri** — dipakai Elasticsearch/Lucene sebagai default; terbukti unggul di banyak benchmark TREC.
+### Keuntungan BM25 (dibanding MinHash untuk tugas pemeringkatan)
+- **Menghasilkan peringkat relevansi langsung** terhadap query, cocok untuk mesin pencari; MinHash tidak memberi skor relevansi query-dokumen.
+- **Membobot term** lewat TF (dengan saturasi) dan IDF, sedangkan MinHash hanya melihat keanggotaan himpunan shingle (ada atau tidak).
+- **Hasil deterministik dan eksak**, tanpa galat estimasi seperti MinHash.
 
-### Kelemahan BM25
+### Kelemahan BM25 (dibanding MinHash)
+- **Tidak dirancang untuk perbandingan all-pairs** antar dokumen; menghitung kemiripan semua pasangan menjadi mahal (sekitar O(n^2)) tanpa trik seperti LSH yang dimiliki MinHash.
 - **Perlu tuning** `k₁` dan `b`; nilai default tak selalu optimal untuk korpus tertentu (mis. jurnal pendek Bahasa Indonesia).
-- **Tetap bag-of-words** — tidak menangani sinonim/polisemi (sama seperti TF-IDF/VSM). *Beruang* vs *uang* tetap masalah; *mobil* vs *kendaraan* tetap dianggap beda.
-- **Kurang intuitif secara geometris** dibanding cosine VSM untuk dijelaskan/divisualisasikan.
+- **Tetap bag-of-words**, tidak menangani sinonim/polisemi. *Beruang* vs *uang* tetap masalah; *mobil* vs *kendaraan* tetap dianggap beda.
 
-### Keuntungan & kelemahan metode kami sendiri (pembanding)
-- **Keunggulan TF-IDF/VSM:** sederhana, tanpa parameter bebas (mudah dipertanggungjawabkan), cosine mudah diinterpretasi, normalisasi panjang otomatis.
-- **Kelemahan:** TF linear tanpa saturasi (rawan bias frekuensi), tetap tak menangkap makna/sinonim, dan untuk vocabulary besar vektornya sangat sparse (boros memori).
+### Keuntungan & kelemahan metode kami sendiri (MinHash)
+- **Keunggulan:** kompresi besar (signature berisi `K` bilangan menggantikan himpunan shingle yang besar), estimasi Jaccard cepat, dan dengan LSH menemukan kandidat duplikat dalam waktu mendekati linear sehingga skalabel untuk korpus sangat besar.
+- **Kelemahan:** hasilnya hanya estimasi (akurasi bergantung `K`, error sekitar 1/akar(K), diminishing returns), berbasis kemiripan himpunan sehingga tidak mengukur relevansi terhadap query dan tidak membobot term penting, serta sensitif pada pemilihan ukuran shingle `k`.
