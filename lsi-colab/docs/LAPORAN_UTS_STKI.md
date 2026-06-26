@@ -18,6 +18,7 @@
 - Bab 4 — Vector Space Model (VSM)
 - Bab 5 — Extractive Text Summarization berbasis TF-IDF
 - Bab 6 — MinHash & Locality-Sensitive Hashing (LSH)
+- Bab 7 — RAG: Retrieval-Augmented Generation (IndoBERT + LLM)
 - Penutup
 
 ---
@@ -585,9 +586,49 @@ Kandidat pasangan terdeteksi: 0
 
 ---
 
+# BAB 7 — RAG: RETRIEVAL-AUGMENTED GENERATION (INDOBERT + LLM)
+
+## 7.1 Teori Fundamental
+
+Keenam metode sebelumnya hanya mampu **me-ranking** dokumen terhadap query; pengguna tetap harus membaca sendiri dokumen teratas untuk menemukan jawaban. **RAG (Retrieval-Augmented Generation)** menambahkan sebuah *Large Language Model* (LLM) di ujung pipeline sehingga sistem dapat **menjawab pertanyaan dalam bahasa alami** beserta **referensi dokumen sumber**.
+
+RAG bekerja dalam dua fase. Fase **retrieval** mencari potongan dokumen (*passage*) paling relevan terhadap query — di sini relevansi diukur dengan cosine similarity, sama seperti VSM, tetapi vektornya adalah **embedding semantik** dari transformer **IndoBERT**, bukan bobot TF-IDF. Fase **generation** mengirim passage teratas sebagai konteks ke LLM, yang lalu menyusun jawaban berdasarkan konteks tersebut dan menuliskan sitasi `[D#]`.
+
+Perbedaan kunci dengan VSM/TF-IDF terletak pada representasi. TF-IDF bersifat *sparse* dan mencocokkan kata secara literal, sedangkan embedding IndoBERT bersifat *dense* dan menangkap makna — sehingga query "mobil listrik" dapat menemukan dokumen yang menulis "kendaraan bermotor listrik berbasis baterai" meski tidak ada kata yang sama persis.
+
+## 7.2 Konstanta yang Dipakai & Justifikasinya
+
+- **Encoder `firqaaa/indo-sentence-bert-base`** — IndoBERT yang di-fine-tune Sentence-BERT. IndoBERT mentah (hanya *masked language modeling*) menghasilkan embedding yang kurang diskriminatif untuk pencarian; versi Sentence-BERT membuat passage relevan naik ke peringkat atas.
+- **`MODEL_LLM = gpt-4o-mini`** (OpenRouter) — model GPT yang murah dan cukup untuk QA berbasis konteks.
+- **`TOP_K = 5`** — jumlah passage konteks; cukup untuk merangkum jawaban tanpa membebani prompt.
+- **`KALIMAT_PER_CHUNK = 4`, `MAX_KATA_CHUNK = 160`** — ukuran passage; batas kata menjaga agar tidak melampaui limit 512 token encoder.
+- **`WORDY_MIN = 0.60`** — filter noise; passage yang <60% kata-huruf (baris tabel tarif, nomor) dibuang.
+
+## 7.3 Contoh & Alur Implementasi
+
+Detail alur langkah demi langkah dipaparkan terpisah pada dokumen [`laporan_rag_1.0.md`](laporan_rag_1.0.md). Korpus bertema **hukum pajak** terdiri atas sepuluh PDF (D1–D10): Undang-Undang, PMK, Permendagri, dan modul akademik mengenai PBB serta Pajak Kendaraan Bermotor. Tiap PDF diekstrak dengan `pdfplumber`, dipecah menjadi passage berukuran bervariasi, difilter dari noise, lalu di-embed menjadi vektor 768 dimensi (~617 passage informatif).
+
+## 7.4 Hasil Output Python
+
+- Pertanyaan **"Bagaimana cara penilaian NJOP untuk PBB-P2?"** dijawab terstruktur: tiga metode penilaian (perbandingan harga, nilai perolehan baru, nilai jual pengganti) serta penilaian massal/individual, dengan sitasi Pasal 3 dan Pasal 15 PMK 85/2024 `[D3]`.
+- Pertanyaan **"Apa objek yang dikenakan PBB?"** dijawab "bumi dan/atau bangunan yang dimiliki, dikuasai, dan/atau dimanfaatkan" dengan sitasi `[D3]`.
+- Pertanyaan **"Apa yang dimaksud Kendaraan Bermotor Listrik Berbasis Baterai?"** dijawab dari definisi PMK 8/2024 `[D9]`; retrieval memunculkan D9, D7, dan D8 yang sama-sama mendefinisikan KBL.
+- Sebagai pembanding, untuk query yang sama, retrieval/VSM saja hanya mengembalikan **daftar passage terurut** tanpa merangkumnya — kontras inilah yang menunjukkan nilai tambah LLM.
+
+## 7.5 Pembahasan
+
+- **Dari meranking ke menjawab.** Inilah lompatan utama: RAG mengubah keluaran sistem dari daftar dokumen menjadi jawaban siap-pakai yang tetap dapat ditelusuri lewat sitasi.
+- **Sentence-BERT krusial.** Percobaan awal dengan IndoBERT mentah + mean pooling membuat query PKB tertarik ke dokumen PBB; versi Sentence-BERT memperbaikinya.
+- **Grounding menekan halusinasi.** LLM diinstruksikan menjawab hanya dari konteks dan menyatakan jujur bila informasi tidak ada, sehingga jawaban tidak mengarang pasal atau angka.
+- **Keterbatasan pada query komparatif.** Pertanyaan "dasar pengenaan PKB tahun 2025 dibanding 2023" dijawab "tidak ditemukan" walau datanya ada. Penyebabnya: token tahun ("2025"/"2023") menyetir embedding ke D5 (Modul PBB) yang padat angka tahun, dan pertanyaan komparatif menuntut dua dokumen sekaligus yang sulit ditangani dense retrieval satu-vektor. Query tanpa token tahun (`dasar pengenaan PKB`) justru menemukan D6/D7/D8 dengan tepat — jadi ini keterbatasan retrieval, bukan bug. Rincian di [`laporan_rag_1.0.md`](laporan_rag_1.0.md) Subbab 7.3.4.
+- **Opsi perbaikan (lanjutan).** Hybrid **BM25 + dense** (menangkap singkatan/tahun secara persis sekaligus makna — menyambung ke Bab 3–4), *query expansion* singkatan, filter metadata tahun, atau dekomposisi pertanyaan komparatif menjadi sub-query.
+- **Keterbatasan lain.** Bila passage relevan tidak masuk `TOP_K`, jawaban bisa kurang lengkap; tabel tarif yang difilter membuat pertanyaan menuntut angka tarif spesifik sulit dijawab; serta pemanggilan LLM bersifat berbayar dan butuh internet.
+
+---
+
 # PENUTUP
 
-Laporan ini telah memaparkan enam metode fundamental dalam Sistem Temu Kembali Informasi:
+Laporan ini telah memaparkan tujuh metode dalam Sistem Temu Kembali Informasi:
 
 1. **Boolean Retrieval** — model klasik berbasis operasi himpunan pada inverted index. Cepat dan sederhana, tetapi tidak memberi ranking.
 2. **Jaccard Similarity** — ukuran kemiripan berbasis himpunan, mengabaikan frekuensi. Cocok untuk *near-duplicate detection*.
@@ -595,8 +636,9 @@ Laporan ini telah memaparkan enam metode fundamental dalam Sistem Temu Kembali I
 4. **VSM (Vector Space Model)** — representasi vektor dokumen dengan cosine similarity; menormalisasi panjang dokumen.
 5. **Extractive Summarization berbasis TF-IDF** — pemilihan kalimat skor tertinggi per paragraf untuk membentuk ringkasan otomatis.
 6. **MinHash & LSH** — estimasi Jaccard secara probabilistik dengan signature ringkas, dilengkapi LSH untuk *similarity search* skala besar.
+7. **RAG (IndoBERT + LLM)** — retrieval semantik dengan embedding IndoBERT lalu jawaban kontekstual dari GPT beserta sitasi; satu-satunya metode yang **menjawab** pertanyaan, bukan sekadar meranking.
 
-Seluruh metode menggunakan **pipeline preprocessing 5 tahap** untuk Bahasa Indonesia: case folding → cleaning → tokenizing → stopword removal (NLTK / Sastrawi) → stemming (Sastrawi/Nazief-Adriani). Konsistensi pipeline ini wajib dijaga karena ranking dan estimasi kemiripan dihitung pada ruang term yang sama.
+Metode 1–6 menggunakan **pipeline preprocessing 5 tahap** untuk Bahasa Indonesia: case folding → cleaning → tokenizing → stopword removal (NLTK / Sastrawi) → stemming (Sastrawi/Nazief-Adriani). Metode RAG sengaja **tidak** memakai stemming/stopword removal karena transformer bekerja paling baik pada teks asli.
 
 ## Daftar Pustaka
 

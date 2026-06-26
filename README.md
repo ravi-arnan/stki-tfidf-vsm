@@ -2,7 +2,7 @@
 
 # Sistem Temu Kembali Informasi (STKI)
 
-_Enam metode Information Retrieval untuk korpus Bahasa Indonesia._
+_Tujuh metode Information Retrieval untuk korpus Bahasa Indonesia._
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=flat&logo=jupyter&logoColor=white)
@@ -15,7 +15,7 @@ _Enam metode Information Retrieval untuk korpus Bahasa Indonesia._
 
 </div>
 
-Implementasi enam metode dasar Information Retrieval untuk korpus berbahasa Indonesia, dengan fokus pada TF-IDF dan Vector Space Model. Setiap metode disertai dasar teori, rumus, dan eksperimen pada jurnal nyata. Proyek ini dikerjakan sebagai tugas UTS mata kuliah STKI.
+Implementasi tujuh metode Information Retrieval untuk korpus berbahasa Indonesia, dengan fokus pada TF-IDF dan Vector Space Model. Setiap metode disertai dasar teori, rumus, dan eksperimen pada dokumen nyata. Metode ketujuh (RAG) menambahkan Large Language Model agar sistem dapat menjawab pertanyaan, bukan sekadar me-ranking dokumen. Proyek ini dikerjakan sebagai tugas mata kuliah STKI.
 
 ## Daftar Isi
 
@@ -41,6 +41,7 @@ Implementasi enam metode dasar Information Retrieval untuk korpus berbahasa Indo
 | 4 | Vector Space Model (VSM) | Representasi vektor dengan cosine similarity | `STKI_TFIDF_VSM_Final.ipynb` |
 | 5 | Extractive Summarization | Pemilihan kalimat dengan skor TF-IDF tertinggi | `STKI_TFIDF_Summarization.ipynb` |
 | 6 | MinHash dan LSH | Estimasi Jaccard probabilistik untuk deteksi dokumen mirip | `STKI_MinHash.ipynb` |
+| 7 | RAG (IndoBERT + LLM) | Retrieval semantik dengan embedding IndoBERT lalu jawaban kontekstual dari GPT beserta sitasi dokumen | `STKI_RAG_LLM.ipynb` |
 
 ## Pipeline Preprocessing
 
@@ -65,12 +66,18 @@ stki-tfidf-vsm/
     ├── STKI_TFIDF_Summarization.ipynb            Bab 5: Extractive Summarization
     ├── STKI_TFIDF_Summarization_Penjelasan.ipynb
     ├── STKI_MinHash.ipynb                        Bab 6: MinHash dan LSH
-    ├── Jurnal1.pdf, Jurnal2.pdf, Jurnal3.pdf     Korpus uji
+    ├── STKI_RAG_LLM.ipynb                        Bab 7: RAG (IndoBERT + GPT)
+    ├── rag_pipeline.py                           Modul RAG (dipakai notebook & frontend)
+    ├── app.py                                    Frontend chat web (Gradio)
+    ├── Jurnal1.pdf, Jurnal2.pdf, Jurnal3.pdf     Korpus uji (metode 1-6)
+    ├── corpus_pajak/                             Korpus hukum pajak (10 PDF) untuk RAG
+    ├── .env                                       Kunci OPENROUTER_API_KEY (tidak di-commit)
     ├── *.png                                      Gambar hasil eksperimen
     └── docs/
         ├── LAPORAN_UTS_STKI.md                   Laporan lengkap
         ├── JAWABAN_SOAL_STKI.md                  Jawaban soal analisis
         ├── laporan_minhash_1.3.md
+        ├── laporan_rag_1.0.md                    Alur implementasi RAG
         └── rumus.md                              Rangkuman rumus MinHash
 ```
 
@@ -114,6 +121,11 @@ jupyter lab        # atau: jupyter notebook
 | nltk | terbaru | Stopword Bahasa Indonesia |
 | pdfplumber | 0.11 | Ekstraksi teks PDF jurnal |
 | matplotlib | 3.10 | Visualisasi akurasi dan ranking |
+| torch | terbaru | Runtime transformer (CPU) untuk RAG |
+| transformers | terbaru | Memuat model IndoBERT |
+| sentence-transformers | terbaru | Embedding kalimat IndoBERT (Sentence-BERT) |
+| openai | terbaru | Klien LLM (GPT via OpenRouter) |
+| python-dotenv | terbaru | Membaca kunci API dari berkas `.env` |
 | jupyterlab | 4.5 | Lingkungan notebook |
 
 ## Korpus Uji
@@ -123,6 +135,30 @@ Tiga jurnal bertema perpustakaan dan temu kembali informasi:
 1. `Jurnal1.pdf`: OPAC pada Aplikasi CIP, Tridinanti Palembang (Elsadantia, 2023)
 2. `Jurnal2.pdf`: Pemanfaatan STKI via OPAC, Poltekkes Sorong (Nanlohy dkk., 2023)
 3. `Jurnal3.pdf`: Strategi Shelving Koleksi, SMAN 2 Trenggalek (Fatoni dan Handayani, 2024)
+
+Metode RAG (notebook ke-7) memakai korpus terpisah di `lsi-colab/corpus_pajak/`: sepuluh dokumen hukum pajak (UU, PMK, Permendagri, dan modul akademik) bertema Pajak Bumi dan Bangunan serta Pajak Kendaraan Bermotor.
+
+### Menjalankan RAG
+
+Notebook `STKI_RAG_LLM.ipynb` butuh kunci API OpenRouter. Buat berkas `lsi-colab/.env`:
+
+```bash
+echo "OPENROUTER_API_KEY=sk-or-v1-..." > lsi-colab/.env
+```
+
+Saat pertama dijalankan, model IndoBERT (~500 MB) diunduh otomatis ke `lsi-colab/hf_cache/`. Berkas `.env` dan `hf_cache/` tidak di-commit.
+
+Tersedia dua cara memakai RAG:
+
+- **Notebook** `STKI_RAG_LLM.ipynb` — untuk eksperimen dan laporan, panggil `jawab("pertanyaan...")`.
+- **Frontend chat (Gradio)** — antarmuka chat web. Jalankan:
+
+  ```bash
+  cd lsi-colab
+  python app.py     # buka http://127.0.0.1:7860
+  ```
+
+  Logika RAG diekstrak ke modul `rag_pipeline.py` yang dipakai bersama oleh notebook dan frontend. Embedding korpus di-cache (`hf_cache/rag_index.npz`) sehingga peluncuran berikutnya cepat.
 
 ## Dokumentasi
 

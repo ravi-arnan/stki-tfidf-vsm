@@ -9,6 +9,16 @@ pdfplumber==0.11.9
 PySastrawi==1.2.0
 nltk
 
+# RAG + LLM (notebook STKI_RAG_LLM)
+# torch CPU-only: pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch
+transformers
+sentence-transformers
+sentencepiece
+openai
+python-dotenv
+gradio
+
 # Lingkungan notebook
 jupyterlab==4.5.6
 notebook==7.5.5

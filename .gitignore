@@ -17,3 +17,13 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.swp
+
+# Secrets (API keys) - JANGAN pernah di-commit
+.env
+*.env
+
+# Cache model HuggingFace + index RAG (besar)
+hf_cache/
+
+# Cache & flagging Gradio
+.gradio/
