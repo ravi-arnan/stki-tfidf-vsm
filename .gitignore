@@ -27,3 +27,7 @@ hf_cache/
 
 # Cache & flagging Gradio
 .gradio/
+
+# HF Space staging (korpus & cache tidak diduplikasi)
+hf-space/corpus_pajak/
+hf-space/hf_cache/

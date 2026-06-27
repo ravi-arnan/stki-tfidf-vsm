@@ -1,0 +1,8 @@
+# Secrets - jangan pernah commit
+.env
+*.env
+
+# Cache model & index (dibangun saat runtime)
+hf_cache/
+.gradio/
+__pycache__/
