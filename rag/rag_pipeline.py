@@ -220,8 +220,11 @@ def _tokenize(teks: str):
     """Tokenisasi sederhana untuk BM25 (huruf+angka, lowercase).
 
     Menyatukan singkatan seperti 'PPnBM' -> 'ppnbm' sehingga cocok dengan query.
+    Tanda hubung dalam-kata juga dibuang ('BBN-KB' -> 'bbnkb', 'PBB-P2' -> 'pbbp2')
+    agar query bertanda hubung cocok dengan istilah yang di PDF tertulis menyatu.
     """
-    return re.findall(r"\w+", teks.lower())
+    teks = re.sub(r"(?<=\w)-(?=\w)", "", teks.lower())
+    return re.findall(r"\w+", teks)
 
 
 def get_bm25():
