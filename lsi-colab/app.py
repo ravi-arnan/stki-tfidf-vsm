@@ -32,18 +32,31 @@ CONTOH = [
 ]
 
 
+def _panel_konteks(referensi):
+    """Panel lipat (HTML <details>) berisi chunk lengkap yang dipakai sebagai konteks."""
+    blok = []
+    for i, p in enumerate(referensi, start=1):
+        blok.append(
+            f"**[{i}] {p['nama_file']} — hal. {p['halaman']} (skor: {p['skor']:.3f})**\n\n"
+            f"{p['teks']}"
+        )
+    isi = "\n\n---\n\n".join(blok)
+    return (
+        "<details>\n"
+        "<summary><b>Lihat chunk yang dipakai sebagai konteks</b></summary>\n\n"
+        f"{isi}\n\n"
+        "</details>"
+    )
+
+
 def respond(message, history):
-    """Fungsi chat: terima pertanyaan -> jalankan RAG -> jawaban + referensi."""
+    """Fungsi chat: terima pertanyaan -> jalankan RAG -> jawaban + panel konteks."""
     try:
         hasil = rag.jawab(message)
     except Exception as e:  # tampilkan error secara ramah, jangan crash UI
         return f"Terjadi kesalahan: {type(e).__name__}: {e}"
 
-    referensi = "\n".join(
-        f"- `[{p['chunk_id']}]` {p['sumber']} _(skor {p['skor']:.3f})_"
-        for p in hasil["referensi"]
-    )
-    return f"{hasil['jawaban']}\n\n---\n**Dokumen referensi:**\n{referensi}"
+    return f"{hasil['jawaban']}\n\n{_panel_konteks(hasil['referensi'])}"
 
 
 demo = gr.ChatInterface(

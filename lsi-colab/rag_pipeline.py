@@ -28,7 +28,7 @@ os.environ.setdefault("HF_HOME", str(BASE_DIR / "hf_cache"))
 
 # ---- Konstanta ----
 KORPUS_DIR        = BASE_DIR / "corpus_pajak"
-CACHE_PATH        = BASE_DIR / "hf_cache" / "rag_index.npz"   # cache embedding korpus
+CACHE_PATH        = BASE_DIR / "hf_cache" / "rag_index_v2.npz"   # cache embedding korpus (v2: per-halaman)
 MODEL_EMBED       = "firqaaa/indo-sentence-bert-base"          # IndoBERT (Sentence-BERT)
 MODEL_LLM         = "openai/gpt-4o-mini"                        # GPT via OpenRouter
 TOP_K             = 5
@@ -37,17 +37,18 @@ MAX_KATA_CHUNK    = 160
 MIN_CHARS         = 40
 WORDY_MIN         = 0.60
 
+# nama_pdf_asli: (doc_id, label sumber, nama_file tampilan)
 PETA_DOKUMEN = {
-    "85uu012.pdf":                        ("D1",  "UU 12/1985 - PBB"),
-    "UU Nomor 12 Tahun 1985.pdf":         ("D2",  "UU 12/1985 - PBB (salinan)"),
-    "2024pmkeuangan085.pdf":              ("D3",  "PMK 85/2024 - Penilaian NJOP PBB-P2"),
-    "234~PMK.03~2022Per.pdf":             ("D4",  "PMK 234/2022 - PBB pertambangan/kehutanan"),
-    "PAJA323304-M1.pdf":                  ("D5",  "Modul PBB Universitas Terbuka"),
-    "Permendagri Nomor 7 Tahun 2025.pdf": ("D6",  "Permendagri 7/2025 - PKB & BBN-KB 2025"),
-    "Permendagri No 8 Tahun 2024_OCR.pdf":("D7",  "Permendagri 8/2024 - PKB & BBN-KB 2024"),
-    "Permendagri Nomor 6 Tahun 2023.pdf": ("D8",  "Permendagri 6/2023 - PKB & BBN-KB 2023"),
-    "2024pmkeuangan008.pdf":              ("D9",  "PMK 8/2024 - PPN Kendaraan Listrik (EV)"),
-    "5~PMK.010~2022Per.pdf":              ("D10", "PMK 5/2022 - PPnBM Kendaraan Bermotor"),
+    "85uu012.pdf":                        ("D1",  "UU 12/1985 - PBB",                         "D1_UU_PBB_1985.pdf"),
+    "UU Nomor 12 Tahun 1985.pdf":         ("D2",  "UU 12/1985 - PBB (salinan)",               "D2_UU_PBB_1985.pdf"),
+    "2024pmkeuangan085.pdf":              ("D3",  "PMK 85/2024 - Penilaian NJOP PBB-P2",      "D3_PMK_85_2024_NJOP.pdf"),
+    "234~PMK.03~2022Per.pdf":             ("D4",  "PMK 234/2022 - PBB pertambangan/kehutanan","D4_PMK_234_2022_PBB.pdf"),
+    "PAJA323304-M1.pdf":                  ("D5",  "Modul PBB Universitas Terbuka",            "D5_Modul_PBB_UT.pdf"),
+    "Permendagri Nomor 7 Tahun 2025.pdf": ("D6",  "Permendagri 7/2025 - PKB & BBN-KB 2025",   "D6_Permendagri_7_2025_PKB.pdf"),
+    "Permendagri No 8 Tahun 2024_OCR.pdf":("D7",  "Permendagri 8/2024 - PKB & BBN-KB 2024",   "D7_Permendagri_8_2024_PKB.pdf"),
+    "Permendagri Nomor 6 Tahun 2023.pdf": ("D8",  "Permendagri 6/2023 - PKB & BBN-KB 2023",   "D8_Permendagri_6_2023_PKB.pdf"),
+    "2024pmkeuangan008.pdf":              ("D9",  "PMK 8/2024 - PPN Kendaraan Listrik (EV)",  "D9_PMK_8_2024_EV.pdf"),
+    "5~PMK.010~2022Per.pdf":              ("D10", "PMK 5/2022 - PPnBM Kendaraan Bermotor",     "D10_PMK_5_2022_PPnBM.pdf"),
 }
 
 SISTEM_PROMPT = (
@@ -120,18 +121,33 @@ def rasio_kata(teks: str) -> float:
 
 
 def build_korpus():
-    """Ekstrak + chunking + filter noise -> list dict passage berlabel."""
+    """Ekstrak per-halaman + chunking + filter noise -> list dict passage berlabel.
+
+    Chunking dilakukan per halaman PDF agar tiap passage menyimpan nomor halaman
+    asalnya (untuk provenance "hal. X" pada sitasi).
+    """
+    import pdfplumber
     korpus = []
-    for nama_file, (doc_id, sumber) in PETA_DOKUMEN.items():
-        teks = bersihkan(ekstrak_teks(KORPUS_DIR / nama_file))
-        passages = [p for p in chunk_dokumen(teks) if rasio_kata(p) >= WORDY_MIN]
-        for j, passage in enumerate(passages):
-            korpus.append({
-                "chunk_id": f"{doc_id}#{j}",
-                "doc_id": doc_id,
-                "sumber": sumber,
-                "teks": passage,
-            })
+    urut = {}   # penghitung chunk per dokumen
+    for nama_pdf, (doc_id, sumber, nama_file) in PETA_DOKUMEN.items():
+        with pdfplumber.open(KORPUS_DIR / nama_pdf) as pdf:
+            for halaman, page in enumerate(pdf.pages, start=1):
+                teks = bersihkan(page.extract_text() or "")
+                if not teks:
+                    continue
+                for passage in chunk_dokumen(teks):
+                    if rasio_kata(passage) < WORDY_MIN:
+                        continue
+                    j = urut.get(doc_id, 0)
+                    urut[doc_id] = j + 1
+                    korpus.append({
+                        "chunk_id": f"{doc_id}#{j}",
+                        "doc_id": doc_id,
+                        "sumber": sumber,
+                        "nama_file": nama_file,
+                        "halaman": halaman,
+                        "teks": passage,
+                    })
     return korpus
 
 
@@ -260,5 +276,5 @@ if __name__ == "__main__":
     print("\nPERTANYAAN:", hasil["query"])
     print("\nJAWABAN:\n", hasil["jawaban"])
     print("\nREFERENSI:")
-    for p in hasil["referensi"]:
-        print(f"  [{p['chunk_id']}] {p['sumber']} (skor {p['skor']:.3f})")
+    for i, p in enumerate(hasil["referensi"], start=1):
+        print(f"  [{i}] {p['nama_file']} - hal. {p['halaman']} (skor {p['skor']:.3f})")
