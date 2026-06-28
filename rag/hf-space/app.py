@@ -15,8 +15,8 @@ JUDUL = "Asisten Hukum Pajak (RAG: IndoBERT + GPT)"
 DESKRIPSI = (
     "Tanya seputar Pajak Bumi & Bangunan (PBB) dan Pajak Kendaraan Bermotor (PKB). "
     "Jawaban disusun oleh GPT **hanya** berdasarkan 10 dokumen hukum pajak (UU/PMK/Permendagri), "
-    "lengkap dengan referensi dokumen `[D#]`. Retrieval memakai embedding **IndoBERT** "
-    "(Sentence-BERT) + cosine similarity."
+    "lengkap dengan referensi dokumen `[D#]`. Retrieval **hybrid**: **BM25** (leksikal) + "
+    "**IndoBERT** dense (Sentence-BERT), digabung via Reciprocal Rank Fusion (RRF)."
 )
 
 CONTOH = [

@@ -14,9 +14,11 @@ short_description: RAG IndoBERT + GPT untuk tanya-jawab hukum pajak
 
 Sistem Temu Kembali Informasi berbasis **Retrieval-Augmented Generation**. Korpus 10 dokumen
 hukum pajak (UU, PMK, Permendagri, Modul UT) bertema Pajak Bumi & Bangunan dan Pajak Kendaraan
-Bermotor di-embed dengan **IndoBERT (Sentence-BERT)**; passage paling relevan diambil via cosine
-similarity, lalu **GPT (`gpt-4o-mini` via OpenRouter)** menyusun jawaban berbahasa Indonesia
-beserta sitasi dokumen `[D#]`.
+Bermotor diindeks dua arah: **IndoBERT (Sentence-BERT)** untuk kemiripan makna (dense) dan
+**BM25** untuk kecocokan kata/singkatan/angka persis (leksikal). Passage paling relevan diambil
+via **retrieval hybrid** — kedua ranking digabung dengan **Reciprocal Rank Fusion (RRF)** — lalu
+**GPT (`gpt-4o-mini` via OpenRouter)** menyusun jawaban berbahasa Indonesia beserta sitasi
+dokumen `[D#]`.
 
 ## Konfigurasi (wajib)
 
@@ -27,4 +29,4 @@ Tambahkan **secret** di Space ini: `Settings → Variables and secrets`:
 > Saat cold start, model IndoBERT (~500 MB) diunduh dan index korpus dibangun (~2–4 menit di CPU),
 > lalu di-cache selama Space aktif.
 
-Bagian dari proyek STKI: <https://github.com/ravi-arnan/stki-tfidf-vsm>
+Bagian dari proyek STKI: <https://github.com/ravi-arnan/stki>

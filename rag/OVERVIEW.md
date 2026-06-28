@@ -214,7 +214,81 @@ Alur update tipikal:
 
 ---
 
-## 8. Keamanan & biaya
+## 8. Menambah atau mengganti dokumen korpus
+
+Operasi paling mungkin dilakukan orang lain. Langkahnya:
+
+1. **Taruh PDF** di `corpus_pajak/`. Pastikan PDF bisa diekstrak teksnya (bukan hasil
+   pindai gambar). Kalau hasil scan, OCR dulu — lihat D7 (`Permendagri No 8 Tahun 2024_OCR.pdf`).
+2. **Daftarkan** di `PETA_DOKUMEN` (`rag_pipeline.py`):
+
+   ```python
+   "namafile.pdf": ("D11", "Label sumber - jenis & tahun", "D11_Nama_Tampilan.pdf"),
+   ```
+
+   - `doc_id` (`D11`) → dipakai LLM untuk sitasi `[D#]`.
+   - **Label sumber** → ikut diindeks BM25, jadi **sertakan jenis & tahun dokumen**
+     (mis. "Permendagri 9/2026 - PKB & BBN-KB 2026") agar bisa dibedakan dari dokumen
+     serupa beda tahun.
+   - **Nama tampilan** → muncul di daftar referensi/panel konteks.
+3. **Bangun ulang index** — cache lama tidak otomatis tahu ada dokumen baru:
+
+   ```python
+   import rag_pipeline as rag
+   rag.load_index(rebuild=True)        # ekstrak + chunk + embed ulang, lalu simpan cache
+   ```
+
+   Atau hapus `hf_cache/rag_index_v2.npz` lalu jalankan apa pun yang memanggil `load_index()`.
+4. **Untuk Space:** salin PDF ke `hf-space/corpus_pajak/` dan samakan `PETA_DOKUMEN` di
+   `hf-space/rag_pipeline.py`, lalu upload ulang. Cache di-rebuild otomatis saat cold start.
+
+> **Catatan:** filter noise (`WORDY_MIN = 0.60`) membuang passage yang didominasi angka/tabel.
+> Dokumen tarif yang padat angka bisa kehilangan sebagian isi — turunkan `WORDY_MIN` bila perlu.
+
+---
+
+## 9. Troubleshooting
+
+| Gejala | Penyebab | Solusi |
+|--------|----------|--------|
+| `RuntimeError: OPENROUTER_API_KEY tidak ditemukan` | `.env` belum ada / salah lokasi | Buat `rag/.env` berisi `OPENROUTER_API_KEY=sk-or-v1-...`; di Space, set **Space secret** dengan nama sama |
+| Instalasi `torch` besar / error CUDA | pip mengunduh build CUDA | Pasang CPU-only: `pip install torch --index-url https://download.pytorch.org/whl/cpu` |
+| Query pertama sangat lambat (~2–4 menit) | Cold start: download model IndoBERT (~500 MB) + bangun index | Wajar sekali di awal; run berikutnya pakai cache. `app.py` sudah warm-up encoder saat startup |
+| Jawaban "informasi tidak ditemukan" padahal ada | Passage relevan tak masuk `TOP_K`, atau dibuang filter noise | Naikkan `TOP_K`; cek apakah pertanyaan komparatif lintas-dokumen (lihat Keterbatasan) |
+| Korpus baru tak muncul di jawaban | Cache lama masih dipakai | `load_index(rebuild=True)` (lihat bagian 8) |
+| Space "Sleeping" / lambat saat dibuka | HF mematikan Space yang idle | Buka ulang untuk membangunkan; tunggu cold start selesai |
+| Hang saat startup (headless / tanpa internet) | Telemetri Gradio | Sudah dinonaktifkan via `GRADIO_ANALYTICS_ENABLED=False` di `app.py` |
+
+---
+
+## 10. Contoh tanya-jawab
+
+Bentuk keluaran `python rag_pipeline.py "<pertanyaan>"` (struktur dari fungsi `__main__`).
+Teks jawaban di bawah bersifat **ilustratif** — kata persis bervariasi karena LLM
+(`temperature=0.2`), dan nomor halaman/skor bergantung hasil retrieval aktual.
+
+```text
+PERTANYAAN: Bagaimana cara penilaian NJOP untuk PBB-P2?
+
+JAWABAN:
+ Penilaian NJOP untuk PBB-P2 dilakukan secara massal maupun individual sesuai
+ ketentuan PMK 85/2024 [D3]. NJOP ditetapkan berdasarkan ... [D3]. Bila objek
+ pajak tidak memenuhi kriteria penilaian massal, dilakukan penilaian individual [D3].
+
+REFERENSI:
+  [1] D3_PMK_85_2024_NJOP.pdf - hal. 4 (skor 0.61)
+  [2] D3_PMK_85_2024_NJOP.pdf - hal. 6 (skor 0.55)
+  [3] D5_Modul_PBB_UT.pdf     - hal. 12 (skor 0.48)
+```
+
+Di frontend Gradio (`app.py`), jawaban yang sama tampil di gelembung chat, dan daftar
+`REFERENSI` muncul sebagai panel lipat **"Lihat chunk yang dipakai sebagai konteks"**
+berisi teks penuh tiap passage (nama file, halaman, skor). Pertanyaan NJOP di atas memang
+mengutip PMK 85/2024 `[D3]` sebagaimana dicatat di `laporan_rag_1.0.md`.
+
+---
+
+## 11. Keamanan & biaya
 
 - Kunci `OPENROUTER_API_KEY` hanya di `.env` (lokal, gitignored) dan Space secret —
   tidak pernah di-hardcode atau di-commit.
@@ -225,7 +299,7 @@ Alur update tipikal:
 
 ---
 
-## 9. Keterbatasan
+## 12. Keterbatasan
 
 - Jawaban terbatas pada isi 10 dokumen; fakta di luar korpus tidak tersedia — sistem
   menyatakannya jujur, bukan mengarang.
