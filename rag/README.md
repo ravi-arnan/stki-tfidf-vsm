@@ -6,6 +6,25 @@ dokumen sumber `[D#]` — sebuah pipeline **RAG (Retrieval-Augmented Generation)
 
 **Demo live (cloud):** <https://huggingface.co/spaces/raviarnan/asisten-hukum-pajak-rag>
 
+## Tech stack
+
+| Lapisan | Komponen | Peran |
+|---------|----------|-------|
+| Bahasa & runtime | **Python 3.12**, venv + pip | Semua kode subsistem |
+| Ekstraksi PDF | **pdfplumber** | Ekstraksi teks per-halaman dari 10 PDF korpus |
+| Retrieval leksikal | **rank-bm25** (BM25Okapi) | Cocokkan kata/singkatan/angka persis (mis. "PPnBM", "2025") |
+| Retrieval dense | **sentence-transformers** + **torch** (CPU) — encoder **IndoBERT** `firqaaa/indo-sentence-bert-base` (768-d) | Cocokkan makna semantik query↔passage |
+| Fusi ranking | Reciprocal Rank Fusion (RRF, K=60) — **numpy** | Gabung ranking BM25 + dense tanpa tuning bobot |
+| Generasi jawaban | **GPT** `openai/gpt-4o-mini` via **OpenRouter** (SDK `openai`) | Susun jawaban Bahasa Indonesia + sitasi `[D#]` |
+| Konfigurasi rahasia | **python-dotenv** (`.env` → `OPENROUTER_API_KEY`) | Muat kunci API; tidak di-hardcode |
+| Frontend | **Gradio** (`gr.ChatInterface`) | Chat lokal + panel chunk konteks |
+| Cache | `numpy.savez` (`rag_index_v2.npz`) + `HF_HOME` cache model | Hindari re-embed & re-download tiap run |
+| Deploy | **Hugging Face Spaces** (runtime Gradio) | Demo cloud publik |
+
+> `torch` di-set CPU-only dan thread BLAS dibatasi 4 (`OMP/MKL/OPENBLAS_NUM_THREADS`) agar
+> mesin tetap responsif. Encoder di-load *lazy* dan di-*warm-up* saat startup `app.py`.
+> Versi pasti dependency ada di `requirements.txt` di root repo.
+
 ## Cara kerja singkat
 
 ```
