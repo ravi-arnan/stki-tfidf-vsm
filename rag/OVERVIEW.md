@@ -102,15 +102,31 @@ Versi pasti dependency ada di `requirements.txt` (root repo, untuk lokal) dan
 
 ### Korpus (D1–D10)
 
-| ID | Sumber |
-|----|--------|
-| D1 / D2 | UU 12/1985 — PBB (D2 salinan) |
-| D3 | PMK 85/2024 — Penilaian NJOP PBB-P2 |
-| D4 | PMK 234/2022 — PBB pertambangan/kehutanan |
-| D5 | Modul PBB Universitas Terbuka |
-| D6 / D7 / D8 | Permendagri PKB & BBN-KB (2025 / 2024 / 2023) |
-| D9 | PMK 8/2024 — PPN Kendaraan Listrik (EV) |
-| D10 | PMK 5/2022 — PPnBM Kendaraan Bermotor |
+Sepuluh PDF hukum pajak resmi (tema PBB + Pajak Kendaraan Bermotor). Semua sumber
+adalah dokumen publik dari portal hukum resmi pemerintah (JDIH Kemenkeu, peraturan.bpk.go.id)
+dan repositori Universitas Terbuka.
+
+| ID | Sumber | Sumber resmi (terverifikasi) |
+|----|--------|------------------------------|
+| D1 | UU 12/1985 — PBB (file `85uu012.pdf`) | [bphn.go.id — 85uu012.pdf](https://bphn.go.id/data/documents/85uu012.pdf) |
+| D2 | UU 12/1985 — PBB (file lain, naskah UU yang sama) | [jdih.kemenkeu.go.id — UU 12/1985](https://jdih.kemenkeu.go.id/fulltext/1985/12TAHUN~1985UU.HTM) |
+| D3 | PMK 85/2024 — Penilaian NJOP PBB-P2 | [jdih.kemenkeu.go.id — PMK 85/2024](https://jdih.kemenkeu.go.id/dok/pmk-85-tahun-2024/summary) |
+| D4 | PMK 234/PMK.03/2022 — klasifikasi & penetapan NJOP PBB (perubahan PMK 186/2019) | [jdih.kemenkeu.go.id — PMK 234/2022](https://jdih.kemenkeu.go.id/dok/234-pmk-03-2022/summary) |
+| D5 | Modul 1 PBB (PAJA3233) — Universitas Terbuka | [pustaka.ut.ac.id — PAJA3233 M1](https://pustaka.ut.ac.id/lib/wp-content/uploads/pdfmk/PAJA323304-M1.pdf) |
+| D6 | Permendagri 7/2025 — dasar pengenaan PKB, BBN-KB & PAB 2025 | [peraturan.bpk.go.id — Permendagri 7/2025](https://peraturan.bpk.go.id/Details/321612/permendagri-no-7-tahun-2025) |
+| D7 | Permendagri 8/2024 — dasar pengenaan PKB, BBN-KB & PAB 2024 | [peraturan.bpk.go.id — Permendagri 8/2024](https://peraturan.bpk.go.id/Details/300076/permendagri-no-8-tahun-2024) |
+| D8 | Permendagri 6/2023 — dasar pengenaan PKB, BBN-KB & PAB 2023 | [peraturan.bpk.go.id — Permendagri 6/2023](https://peraturan.bpk.go.id/Details/252380/permendagri-no-6-tahun-2023) |
+| D9 | PMK 8/2024 — PPN DTP kendaraan listrik (EV) TA 2024 | [jdih.kemenkeu.go.id — PMK 8/2024](https://jdih.kemenkeu.go.id/dok/pmk-8-tahun-2024) |
+| D10 | PMK 5/PMK.010/2022 — PPnBM DTP kendaraan bermotor TA 2022 | [jdih.kemenkeu.go.id — PMK 5/2022](https://jdih.kemenkeu.go.id/api/download/d4c58cfc-2eda-491a-a46f-a0aa52c67877/5~PMK.010~2022Per.pdf) |
+
+> D1 & D2 adalah **dua file PDF berbeda** (ukuran/hash beda) yang memuat **naskah UU
+> 12/1985 yang sama** — sistem memperlakukannya sebagai dua dokumen terpisah. Nama file
+> D1 (`85uu012.pdf`) cocok dengan pola BPHN; asal unduh persis D2 tak bisa dipastikan dari
+> namanya, jadi ditautkan ke naskah resmi UU yang sama di JDIH Kemenkeu.
+>
+> Judul resmi D6–D8 mencakup PKB, BBN-KB **dan Pajak Alat Berat (PAB)** — cakupan
+> sedikit lebih luas dari label ringkasnya. UU/PMK/Permendagri di atas adalah dokumen
+> hukum publik; Modul UT (D5) mencantumkan sumbernya pada portal resmi Universitas Terbuka.
 
 ---
 

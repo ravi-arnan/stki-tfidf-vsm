@@ -54,17 +54,22 @@ bobot skala skor yang berbeda.
 
 ## Korpus
 
-Sepuluh PDF hukum pajak di `corpus_pajak/` (tema PBB + Pajak Kendaraan Bermotor):
+Sepuluh PDF hukum pajak di `corpus_pajak/` (tema PBB + Pajak Kendaraan Bermotor).
+Semua dari portal hukum resmi pemerintah (JDIH Kemenkeu, peraturan.bpk.go.id) dan
+repositori Universitas Terbuka:
 
-| ID | Sumber |
-|----|--------|
-| D1 / D2 | UU 12/1985 — PBB (D2 salinan) |
-| D3 | PMK 85/2024 — Penilaian NJOP PBB-P2 |
-| D4 | PMK 234/2022 — PBB pertambangan/kehutanan |
-| D5 | Modul PBB Universitas Terbuka |
-| D6 / D7 / D8 | Permendagri PKB & BBN-KB (2025 / 2024 / 2023) |
-| D9 | PMK 8/2024 — PPN Kendaraan Listrik (EV) |
-| D10 | PMK 5/2022 — PPnBM Kendaraan Bermotor |
+| ID | Sumber | Sumber resmi |
+|----|--------|--------------|
+| D1 | UU 12/1985 — PBB (`85uu012.pdf`) | [bphn.go.id](https://bphn.go.id/data/documents/85uu012.pdf) |
+| D2 | UU 12/1985 — PBB (file lain, UU sama) | [jdih.kemenkeu.go.id](https://jdih.kemenkeu.go.id/fulltext/1985/12TAHUN~1985UU.HTM) |
+| D3 | PMK 85/2024 — Penilaian NJOP PBB-P2 | [jdih.kemenkeu.go.id](https://jdih.kemenkeu.go.id/dok/pmk-85-tahun-2024/summary) |
+| D4 | PMK 234/2022 — klasifikasi & penetapan NJOP PBB | [jdih.kemenkeu.go.id](https://jdih.kemenkeu.go.id/dok/234-pmk-03-2022/summary) |
+| D5 | Modul PBB (PAJA3233) — Universitas Terbuka | [pustaka.ut.ac.id](https://pustaka.ut.ac.id/lib/wp-content/uploads/pdfmk/PAJA323304-M1.pdf) |
+| D6 | Permendagri 7/2025 — PKB, BBN-KB & PAB 2025 | [peraturan.bpk.go.id](https://peraturan.bpk.go.id/Details/321612/permendagri-no-7-tahun-2025) |
+| D7 | Permendagri 8/2024 — PKB, BBN-KB & PAB 2024 | [peraturan.bpk.go.id](https://peraturan.bpk.go.id/Details/300076/permendagri-no-8-tahun-2024) |
+| D8 | Permendagri 6/2023 — PKB, BBN-KB & PAB 2023 | [peraturan.bpk.go.id](https://peraturan.bpk.go.id/Details/252380/permendagri-no-6-tahun-2023) |
+| D9 | PMK 8/2024 — PPN Kendaraan Listrik (EV) | [jdih.kemenkeu.go.id](https://jdih.kemenkeu.go.id/dok/pmk-8-tahun-2024) |
+| D10 | PMK 5/2022 — PPnBM Kendaraan Bermotor | [jdih.kemenkeu.go.id](https://jdih.kemenkeu.go.id/api/download/d4c58cfc-2eda-491a-a46f-a0aa52c67877/5~PMK.010~2022Per.pdf) |
 
 ## Isi folder
 
